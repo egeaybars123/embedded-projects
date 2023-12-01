@@ -12,7 +12,7 @@ int main() {
     extendedEuclidean(31, 3480, &x, &y, &gcd);
     int priv = generatePrivateKey(31, 3599);
     printf("Private key: (%d, %d)\n", priv, 3480);
-    int encrypted = mod_pow(2210, 15, 4897);
+    int encrypted = mod_pow(2162, 15, 4897);
     printf("Encrypted text: %lld \n", encrypted);
     int decrypted = mod_pow(970, 4439, 4897);
     printf("Decrypted text: %lld \n", decrypted);

@@ -18,13 +18,20 @@ int generatePrivateKey(int e, int m);
 int modInverse(int A, int M);
 int encryptMessage(int message, int e, int n);
 long long mod_pow(long long base, long long exponent, long long modulus);
+void int_to_array(int _input, int _input1, char _arr[16]);
+int summ(int inp1, int inp2);
 
 int main(void){
 	char lookup[]= {'1','2','3','A','4','5','6','B','7','8','9','C','*','0','#','D'};
+	char display_val[16]={' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '};
+	
 	int input[8];
 	int input1[4];
 	int input2[4];
+	int inp1, inp2;
+	long long enc1, enc2;
 	uint32_t key;
+	int sum;
 	//unsigned char display_val;
 	
 	int privKey = generatePrivateKey(31, 3599);
@@ -56,21 +63,38 @@ int main(void){
 	print_fnc("SELECT MODE:");
 	Delay(1000000);
 	while(1) {
-		while(keypad_getkey() == 0) {}
+		//while(keypad_getkey() == 0) {}
 			Delay(200000);
 			key = keypad_getkey();
-			LCD_data(lookup[key-1]);
-			Delay(400000);
 			//ENCRYPTION
 			if(key == 4) {
-				Delay(1000000);
-				LCD_command(0x01);
+				Delay(300000);
+				LCD_data(lookup[key-1]);
+				Delay(300000);
 				
-				//Show Encrypted
+				separate_blocks(input, 8, input1, input2);			
+				//inp1 = array_to_int4(input1);
+				//inp2 = array_to_int4(input2);
+				inp1 = 2210;
+				inp2 = 2162;
+				
+				enc1 = mod_pow(inp1, 15, 4897);
+				enc2 = mod_pow(inp2, 15, 4897);
+				int_to_array(enc1, enc2, display_val);
+				Delay(300000);
+				
+				LCD_command(0x01);
 				LCD_command(0x80);
 				print_fnc("ENC. MESSAGE:");
+				
 				LCD_command(0xC0);
-				//separate_blocks(input, 8, input1, input2);
+				//print_fnc("AA");
+				Delay(300000);
+				
+				for(int i=0; i<16; i++) {
+					LCD_data(display_val[i]);
+					Delay(100000);
+				}
 				
 			}
 			
@@ -81,16 +105,49 @@ int main(void){
 				
 			}
 	}
-	
-	
+}
+
+//*************** LCD PRINT UTILS ******************
+void int_to_array(int _input, int _input1, char _arr[16]) {
+    int digitVal;
+    int _input1Count=0;
+    int _inputCount=0;
+
+    int temp = _input;
+    while (temp != 0) {
+        temp /= 10;
+        _inputCount++;
+    }
+
+    temp = _input1;
+    while (temp != 0) {
+        temp /= 10;
+        _input1Count++;
+    }
+
+    for (int i=_input1Count-1; i >= 0; i--) {
+        digitVal = _input1 % 10;
+        _input1 /= 10;
+        _arr[_inputCount+i] = (char) digitVal + '0';
+    }
+
+    for (int i=_inputCount-1; i >=0; i--) {
+        digitVal = _input % 10;
+        _input /= 10;
+        _arr[i] = (char) digitVal + '0';
+    }
 }
 
 //***************DATA STRUCTURE UTILS***************
 
+int summ(int inp1, int inp2) {
+	return inp1 + inp2;
+}
+
 int array_to_int4(int _input[4]) {
     int sum = 0;
     for (int i=0; i<4; i++) {
-        sum += _input[i] * pow(10, (3-i));
+        sum += _input[i] * (int) pow(10, (3-i));
     }
     return sum;
 }

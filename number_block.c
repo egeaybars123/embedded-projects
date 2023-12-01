@@ -1,23 +1,59 @@
 #include <stdio.h>
 #include <math.h>
+void int_to_array(int _input, int _input1, char _arr[16]);
 
 int main() {
     int input[8] = {2,2,1,0,2,1,6,2};
-    int input_whole;
     int input1[4]; 
     int input2[4];  
-    array_to_int8(input);
-    separate_blocks(input, 8, input1, input2);
-    for (int i=0; i < 4; i++) {
+    char display[16];
+    //array_to_int8(input);
+    //separate_blocks(input, 8, input1, input2);
+   /*  for (int i=0; i < 4; i++) {
         printf("%d,", input1[i]);
     }
     for (int i=0; i < 4; i++) {
         printf("%d,", input2[i]);
+    } */
+
+    //array_to_int4(input1);
+    //array_to_int4(input2);
+
+    int_to_array(220, 2162, display);
+    for (int i=0; i < 16; i++) {
+        printf("%c,", display[i]);
+    }
+    return 0;
+}
+
+void int_to_array(int _input, int _input1, char _arr[16]) {
+    int digitVal;
+    int _input1Count=0;
+    int _inputCount=0;
+
+    int temp = _input;
+    while (temp != 0) {
+        temp /= 10;
+        _inputCount++;
     }
 
-    array_to_int4(input1);
-    array_to_int4(input2);
-    return 0;
+    temp = _input1;
+    while (temp != 0) {
+        temp /= 10;
+        _input1Count++;
+    }
+
+    for (int i=_input1Count-1; i >= 0; i--) {
+        digitVal = _input1 % 10;
+        _input1 /= 10;
+        _arr[_inputCount+i] = (char) digitVal + '0';
+    }
+
+    for (int i=_inputCount-1; i >=0; i--) {
+        digitVal = _input % 10;
+        _input /= 10;
+        _arr[i] = (char) digitVal + '0';
+    }
 }
 
 void array_to_int8(int _input[8]) {
