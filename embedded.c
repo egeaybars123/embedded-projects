@@ -34,7 +34,7 @@ int main(void){
 	int sum;
 	//unsigned char display_val;
 	
-	int privKey = generatePrivateKey(31, 3599);
+	//int privKey = generatePrivateKey(31, 3599);
 	
 	LCD_init();
 	LCD_command(0x01);
@@ -73,14 +73,14 @@ int main(void){
 				Delay(300000);
 				
 				separate_blocks(input, 8, input1, input2);			
-				//inp1 = array_to_int4(input1);
-				//inp2 = array_to_int4(input2);
-				inp1 = 2210;
-				inp2 = 2162;
+				inp1 = array_to_int4(input1);
+				inp2 = array_to_int4(input2);
+				//inp1 = 2210;
+				//inp2 = 2162;
 				
 				enc1 = mod_pow(inp1, 15, 4897);
 				enc2 = mod_pow(inp2, 15, 4897);
-				int_to_array(enc1, enc2, display_val);
+				int_to_array((int) enc1, (int) enc2, display_val);
 				Delay(300000);
 				
 				LCD_command(0x01);
@@ -99,9 +99,35 @@ int main(void){
 			}
 			
 			//DECRYPTION
-			else if(key == 15) {
-				Delay(1000000);
+			if(key == 16) {
+				Delay(300000);
+				LCD_data(lookup[key-1]);
+				Delay(300000);
+				
+				separate_blocks(input, 8, input1, input2);			
+				inp1 = array_to_int4(input1);
+				inp2 = array_to_int4(input2);
+				//inp1 = 2210;
+				//inp2 = 2162;
+				
+				enc1 = mod_pow(inp1, 4439, 4897);
+				enc2 = mod_pow(inp2, 4439, 4897);
+				int_to_array((int) enc1, (int) enc2, display_val);
+				Delay(300000);
+				
 				LCD_command(0x01);
+				LCD_command(0x80);
+				print_fnc("DEC. MESSAGE:");
+				
+				LCD_command(0xC0);
+				//print_fnc("AA");
+				Delay(300000);
+				
+				for(int i=0; i<16; i++) {
+					LCD_data(display_val[i]);
+					Delay(100000);
+				}
+				
 				
 			}
 	}
@@ -144,14 +170,14 @@ int summ(int inp1, int inp2) {
 	return inp1 + inp2;
 }
 
-int array_to_int4(int _input[4]) {
-    int sum = 0;
+int array_to_int4(int input[4]) {
+    int result = 0;
     for (int i=0; i<4; i++) {
-        sum += _input[i] * (int) pow(10, (3-i));
+        result *= 10;
+        result += input[i];
     }
-    return sum;
+    return result;
 }
-
 void separate_blocks(int original[], int length, int firstHalf[], int secondHalf[]) {
     int halfLength = length / 2;
 
@@ -191,9 +217,10 @@ long long mod_pow(long long base, long long exponent, long long modulus) {
 
 //e=31 and mod m = 3599
 //Private key: ( modInverse(e,m), 3480(n) )
-int generatePrivateKey(int e, int m) {
-    return modInverse(e, m);
-}
+
+//int generatePrivateKey(int e, int m) {
+//    return modInverse(e, m);
+//}
 
 int modInverse(int A, int M) { 
     for (int X = 1; X < M; X++) 
