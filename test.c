@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 void extendedEuclidean(int a, int b, int* x, int* y, int* gcd);
-int gcdExtended(int a, int b, int* x, int* y);
 int generatePrivateKey(int e, int m);
 int modInverse(int A, int M);
 int encryptMessage(int message, int e, int n);
@@ -9,16 +8,54 @@ long long mod_pow(long long base, long long exponent, long long modulus);
 
 int main() {
     int x, y, gcd;
-    extendedEuclidean(31, 3480, &x, &y, &gcd);
-    int priv = generatePrivateKey(31, 3599);
+    int out;
+    //extendedEuclidean(15, 4756, &x, &y, &gcd);
+    extendedEuclidean(7, 3480, &x, &y, &gcd);
+    printf("GCD: %d \n", gcd);
+    out = iterate_e();
+    printf("Iterated E: %d \n", out);
+    int priv = generatePrivateKey(7, 3480);
     printf("Private key: (%d, %d)\n", priv, 3480);
-    int encrypted = mod_pow(2162, 15, 4897);
+    int iterated = iterate_d();
+    printf("Private key: (%d, %d)\n", priv, 3480);
+
+    int encrypted = mod_pow(2210, out, 3599);
     printf("Encrypted text: %lld \n", encrypted);
-    int decrypted = mod_pow(970, 4439, 4897);
+    int decrypted = mod_pow(encrypted, iterated, 3599);
+    printf("Decrypted text: %lld \n", decrypted);
+
+    encrypted = mod_pow(2162, out, 3599);
+    printf("Encrypted text: %lld \n", encrypted);
+    decrypted = mod_pow(encrypted, iterated, 3599);
     printf("Decrypted text: %lld \n", decrypted);
 
     return 0;
 }
+
+int iterate_e() {
+    int x, y;
+    int gcd = 0;
+    int tryNumber = 1;
+    while (gcd != 1) {
+        tryNumber++;
+        extendedEuclidean(tryNumber, 3480, &x, &y, &gcd);
+    }
+    return tryNumber;
+}
+
+int iterate_d() {
+    int x, y;
+    int privKey;
+    int gcd = 0;
+    int tryNumber = 1;
+    while (gcd != 1) {
+        tryNumber++;
+        extendedEuclidean(tryNumber, 3480, &x, &y, &gcd);
+    }
+    privKey = generatePrivateKey(tryNumber, 3480);
+    return privKey;
+}
+
 
 //Encryption ---- p = 59, q = 61.
 //M = 58*60=3480
@@ -53,35 +90,30 @@ int modInverse(int A, int M) {
             return X; 
 } 
 
-void extendedEuclidean(int a, int b, int* x, int* y, int* gcd) {
-    int s, t = 0;
-    int old_s = 1;
-    int r = b;
-    int old_r = a;
+void  extendedEuclidean(int a, int b, int* x, int* y, int* gcd) {
+    int s = 0;
     int temp = 0;
+    int t = 0;
+    int r = b;
+    int old_s = 1;
+    int old_r = a;
+    
+    while(r != 0) {
+        int quotient = old_r / r;
 
-    while (r != 0) {
-        int quotient = old_r/r;
-        
         temp = r;
-        r = old_r - r*quotient;
+        r = old_r - quotient * r;
         old_r = temp;
 
         temp = s;
-        s = old_s - s*quotient;
+        s = old_s - quotient * s;
         old_s = temp;
-
-        //temp = t;
-        //t = old_t - t*quotient;
-        //old_t = temp;
     }
-
     if (b != 0)
     {
         t = (old_r - old_s * a) / b;
     }
 
-    //printf("Bezout Coefficients: (x: %d)..(y: %d)..(gcd: %d) \n", old_s, t, old_r);
     *x = old_s;
     *y = t;
     *gcd = old_r;

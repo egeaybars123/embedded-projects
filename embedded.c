@@ -19,7 +19,8 @@ int modInverse(int A, int M);
 int encryptMessage(int message, int e, int n);
 long long mod_pow(long long base, long long exponent, long long modulus);
 void int_to_array(int _input, int _input1, char _arr[16]);
-int summ(int inp1, int inp2);
+int iterate_e(void);
+int iterate_d(void);
 
 int main(void){
 	char lookup[]= {'1','2','3','A','4','5','6','B','7','8','9','C','*','0','#','D'};
@@ -30,11 +31,8 @@ int main(void){
 	int input2[4];
 	int inp1, inp2;
 	long long enc1, enc2;
+	int e, d;
 	uint32_t key;
-	int sum;
-	//unsigned char display_val;
-	
-	//int privKey = generatePrivateKey(31, 3599);
 	
 	LCD_init();
 	LCD_command(0x01);
@@ -77,9 +75,9 @@ int main(void){
 				inp2 = array_to_int4(input2);
 				//inp1 = 2210;
 				//inp2 = 2162;
-				
-				enc1 = mod_pow(inp1, 15, 4897);
-				enc2 = mod_pow(inp2, 15, 4897);
+				e = iterate_e();
+				enc1 = mod_pow(inp1, e, 3599);
+				enc2 = mod_pow(inp2, e, 3599);
 				int_to_array((int) enc1, (int) enc2, display_val);
 				Delay(300000);
 				
@@ -88,7 +86,6 @@ int main(void){
 				print_fnc("ENC. MESSAGE:");
 				
 				LCD_command(0xC0);
-				//print_fnc("AA");
 				Delay(300000);
 				
 				for(int i=0; i<16; i++) {
@@ -109,9 +106,9 @@ int main(void){
 				inp2 = array_to_int4(input2);
 				//inp1 = 2210;
 				//inp2 = 2162;
-				
-				enc1 = mod_pow(inp1, 4439, 4897);
-				enc2 = mod_pow(inp2, 4439, 4897);
+				d = iterate_d();
+				enc1 = mod_pow(inp1, d, 3599);
+				enc2 = mod_pow(inp2, d, 3599);
 				int_to_array((int) enc1, (int) enc2, display_val);
 				Delay(300000);
 				
@@ -166,10 +163,6 @@ void int_to_array(int _input, int _input1, char _arr[16]) {
 
 //***************DATA STRUCTURE UTILS***************
 
-int summ(int inp1, int inp2) {
-	return inp1 + inp2;
-}
-
 int array_to_int4(int input[4]) {
     int result = 0;
     for (int i=0; i<4; i++) {
@@ -215,12 +208,36 @@ long long mod_pow(long long base, long long exponent, long long modulus) {
     return result;
 }
 
+int iterate_e(void) {
+    int x, y;
+    int gcd = 0;
+    int tryNumber = 1;
+    while (gcd != 1) {
+        tryNumber++;
+        extendedEuclidean(tryNumber, 3480, &x, &y, &gcd);
+    }
+    return tryNumber;
+}
+
+int iterate_d(void) {
+    int x, y;
+    int privKey;
+    int gcd = 0;
+    int tryNumber = 1;
+    while (gcd != 1) {
+        tryNumber++;
+        extendedEuclidean(tryNumber, 3480, &x, &y, &gcd);
+    }
+    privKey = generatePrivateKey(tryNumber, 3480);
+    return privKey;
+}
+
 //e=31 and mod m = 3599
 //Private key: ( modInverse(e,m), 3480(n) )
 
-//int generatePrivateKey(int e, int m) {
-//    return modInverse(e, m);
-//}
+int generatePrivateKey(int e, int m) {
+    return modInverse(e, m);
+}
 
 int modInverse(int A, int M) { 
     for (int X = 1; X < M; X++) 
@@ -229,29 +246,25 @@ int modInverse(int A, int M) {
 		return 0;
 } 
 
-void extendedEuclidean(int a, int b, int* x, int* y, int* gcd) {
-    int s, t = 0;
-    int old_s = 1;
-    int r = b;
-    int old_r = a;
+void  extendedEuclidean(int a, int b, int* x, int* y, int* gcd) {
+    int s = 0;
     int temp = 0;
+    int t = 0;
+    int r = b;
+    int old_s = 1;
+    int old_r = a;
+    
+    while(r != 0) {
+        int quotient = old_r / r;
 
-    while (r != 0) {
-        int quotient = old_r/r;
-        
         temp = r;
-        r = old_r - r*quotient;
+        r = old_r - quotient * r;
         old_r = temp;
 
         temp = s;
-        s = old_s - s*quotient;
+        s = old_s - quotient * s;
         old_s = temp;
-
-        //temp = t;
-        //t = old_t - t*quotient;
-        //old_t = temp;
     }
-
     if (b != 0)
     {
         t = (old_r - old_s * a) / b;

@@ -29,10 +29,10 @@ int main() {
     //array_to_int4(input1);
     //array_to_int4(input2);
 
-    /* int_to_array(220, 2162, display);
+    int_to_array_test(22102162, display);
     for (int i=0; i < 16; i++) {
         printf("%c,", display[i]);
-    } */
+    }
     return 0;
 }
 
@@ -43,6 +43,25 @@ int array_to_int(int input[4]) {
         result += input[i];
     }
     return result;
+}
+
+
+void int_to_array_test(int _input, char _arr[16]) {
+    int digitVal;
+    //int _input1Count=0;
+    int _inputCount=0;
+
+    int temp = _input;
+    while (temp != 0) {
+        temp /= 10;
+        _inputCount++;
+    }
+
+    for (int i=_inputCount-1; i >=0; i--) {
+        digitVal = _input % 10;
+        _input /= 10;
+        _arr[i] = (char) digitVal + '0';
+    }
 }
 
 void int_to_array(int _input, int _input1, char _arr[16]) {
