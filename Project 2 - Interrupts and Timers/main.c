@@ -14,7 +14,7 @@ void init_LEDs(void);
 void PORTA_IRQHandler(void);
 void PORTD_IRQHandler(void);
 
-volatile unsigned int count = 0;
+static volatile unsigned count = 0;
 
 int main(void){
 	//Enable clock on multiple ports
@@ -22,10 +22,11 @@ int main(void){
 	SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK;
 	SIM->SCGC5 |= SIM_SCGC5_PORTD_MASK;
 	
+	__enable_irq();
 	init_button();
 	init_counter();
 	init_LEDs();
-	__enable_irq();
+	
 	
 	while(1){
 		blink_red();
@@ -36,7 +37,7 @@ int main(void){
 
 //PORT A 1 - Button 1 Interrupt Pin (ISR1) - Green LED Blinking
 //PORT A 2 - Button 2 Interrupt Pin (ISR1) - Halt blinking for 2 seconds
-//PORT D 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORTD 0,1,2,3 chosen for the LEDs.
+//PORT A 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORT E 0,1,2,3 chosen for the LEDs.
 
 void init_button(void) {
 	PORTA->PCR[1] |= PORT_PCR_MUX(1) | PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0a);
@@ -44,32 +45,32 @@ void init_button(void) {
 	PTA->PDDR &= ~MASK(1);
 	PTA->PDDR &= ~MASK(2);
 	
-	NVIC_SetPriority(PORTA_IRQn, 128);
+	NVIC_SetPriority(PORTA_IRQn, 0x80);
 	NVIC_ClearPendingIRQ(PORTA_IRQn);
 	NVIC_EnableIRQ(PORTA_IRQn);
 }
 
 void init_LEDs(void) {
-	PORTD->PCR[0] &= ~PORT_PCR_MUX_MASK;
-	PORTD-> PCR[0] |= PORT_PCR_MUX(1);
+	PORTB->PCR[0] &= ~PORT_PCR_MUX_MASK;
+	PORTB-> PCR[0] |= PORT_PCR_MUX(1);
 	
-	PORTD->PCR[1] &= ~PORT_PCR_MUX_MASK;
-	PORTD-> PCR[1] |= PORT_PCR_MUX(1);
+	PORTB->PCR[1] &= ~PORT_PCR_MUX_MASK;
+	PORTB-> PCR[1] |= PORT_PCR_MUX(1);
 	
-	PORTD->PCR[2] &= ~PORT_PCR_MUX_MASK;
-	PORTD-> PCR[2] |= PORT_PCR_MUX(1);
+	PORTB->PCR[2] &= ~PORT_PCR_MUX_MASK;
+	PORTB-> PCR[2] |= PORT_PCR_MUX(1);
 	
-	PORTD->PCR[3] &= ~PORT_PCR_MUX_MASK;
-	PORTD-> PCR[3] |= PORT_PCR_MUX(1);
+	PORTB->PCR[3] &= ~PORT_PCR_MUX_MASK;
+	PORTB-> PCR[3] |= PORT_PCR_MUX(1);
 	
-	PTD->PDDR |= MASK(0) | MASK(1) | MASK(2)| MASK(3); //set as output
+	PTB->PDDR |= MASK(0) | MASK(1) | MASK(2)| MASK(3); //set as output
 }
 
 void init_counter(void) {
 	PORTD->PCR[4] |= PORT_PCR_MUX(1) | PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0a);
 	PTD->PDDR &= ~MASK(4);
 	
-	NVIC_SetPriority(PORTD_IRQn, 128);
+	NVIC_SetPriority(PORTD_IRQn, 0xC0);
 	NVIC_ClearPendingIRQ(PORTD_IRQn);
 	NVIC_EnableIRQ(PORTD_IRQn);
 }
@@ -80,7 +81,7 @@ void blink_red(void) {
 	
 	PTB->PDDR |= MASK(18);
 	while(1) {
-		PTB->PTOR = MASK(18);
+		PTB->PTOR |= MASK(18);
 		Delay(1500000);
 	}
 }
@@ -93,7 +94,7 @@ void blink_green(void) {
 	
 	int count = 0;
 	while(count < 10) {
-		PTB->PTOR = MASK(19);
+		PTB->PTOR |= MASK(19);
 		Delay(1500000);
 		count++;
 	}
@@ -123,7 +124,7 @@ void PORTD_IRQHandler(void) {
 	
 	if(PORTD->ISFR & MASK(4)) {
 		count++;
-		PTD->PDOR = (count << 0);
+		PTB->PDOR = (count << 0);
 	}
 	if (count == 16) {
 		count = 0;
