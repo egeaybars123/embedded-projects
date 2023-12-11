@@ -19,12 +19,12 @@ int main() {
     int iterated = iterate_d();
     printf("Private key: (%d, %d)\n", priv, 3480);
 
-    int encrypted = mod_pow(2210, out, 3599);
+    int encrypted = mod_pow(1112, out, 3599);
     printf("Encrypted text: %lld \n", encrypted);
     int decrypted = mod_pow(encrypted, iterated, 3599);
     printf("Decrypted text: %lld \n", decrypted);
 
-    encrypted = mod_pow(2162, out, 3599);
+    encrypted = mod_pow(2021, out, 3599);
     printf("Encrypted text: %lld \n", encrypted);
     decrypted = mod_pow(encrypted, iterated, 3599);
     printf("Decrypted text: %lld \n", decrypted);
