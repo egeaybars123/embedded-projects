@@ -9,13 +9,22 @@ void Delay(volatile unsigned int time_del);
 void blink_green(void);
 void blink_red(void);
 void init_button(void);
+void init_counter(void);
+void init_LEDs(void);
 void PORTA_IRQHandler(void);
+void PORTD_IRQHandler(void);
+
+volatile unsigned int count = 0;
 
 int main(void){
+	//Enable clock on multiple ports
 	SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK;
+	SIM->SCGC5 |= SIM_SCGC5_PORTD_MASK;
 	
 	init_button();
+	init_counter();
+	init_LEDs();
 	__enable_irq();
 	
 	while(1){
@@ -25,8 +34,9 @@ int main(void){
 	
 }
 
-//PORT A 1 - Button 1 Interrupt Pin - Green LED Blinking
-//PORT A 2 - Button 2 Interrupt Pin - Halt blinking for 2 seconds
+//PORT A 1 - Button 1 Interrupt Pin (ISR1) - Green LED Blinking
+//PORT A 2 - Button 2 Interrupt Pin (ISR1) - Halt blinking for 2 seconds
+//PORT D 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORTD 0,1,2,3 chosen for the LEDs.
 
 void init_button(void) {
 	PORTA->PCR[1] |= PORT_PCR_MUX(1) | PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0a);
@@ -37,6 +47,31 @@ void init_button(void) {
 	NVIC_SetPriority(PORTA_IRQn, 128);
 	NVIC_ClearPendingIRQ(PORTA_IRQn);
 	NVIC_EnableIRQ(PORTA_IRQn);
+}
+
+void init_LEDs(void) {
+	PORTD->PCR[0] &= ~PORT_PCR_MUX_MASK;
+	PORTD-> PCR[0] |= PORT_PCR_MUX(1);
+	
+	PORTD->PCR[1] &= ~PORT_PCR_MUX_MASK;
+	PORTD-> PCR[1] |= PORT_PCR_MUX(1);
+	
+	PORTD->PCR[2] &= ~PORT_PCR_MUX_MASK;
+	PORTD-> PCR[2] |= PORT_PCR_MUX(1);
+	
+	PORTD->PCR[3] &= ~PORT_PCR_MUX_MASK;
+	PORTD-> PCR[3] |= PORT_PCR_MUX(1);
+	
+	PTD->PDDR |= MASK(0) | MASK(1) | MASK(2)| MASK(3); //set as output
+}
+
+void init_counter(void) {
+	PORTD->PCR[4] |= PORT_PCR_MUX(1) | PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0a);
+	PTD->PDDR &= ~MASK(4);
+	
+	NVIC_SetPriority(PORTD_IRQn, 128);
+	NVIC_ClearPendingIRQ(PORTD_IRQn);
+	NVIC_EnableIRQ(PORTD_IRQn);
 }
 
 void blink_red(void) {
@@ -69,7 +104,7 @@ void blink_green(void) {
 
 void PORTA_IRQHandler(void) {
 	//clear pending interrupts
-	NVIC_ClearPendingIRQ(PORTD_IRQn);
+	NVIC_ClearPendingIRQ(PORTA_IRQn);
 	
 	if(PORTA->ISFR & MASK(1)) {
 		blink_green();
@@ -80,4 +115,20 @@ void PORTA_IRQHandler(void) {
 	
 	//clear status flags.
 	PORTA->ISFR = 0xffffffff;
+}
+
+void PORTD_IRQHandler(void) {
+	//clear pending interrupts
+	NVIC_ClearPendingIRQ(PORTD_IRQn);
+	
+	if(PORTD->ISFR & MASK(4)) {
+		count++;
+		PTD->PDOR = (count << 0);
+	}
+	if (count == 16) {
+		count = 0;
+	}
+	
+	//clear status flags.
+	PORTD->ISFR = 0xffffffff;
 }
