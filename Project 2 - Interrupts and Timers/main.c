@@ -52,7 +52,7 @@ int main(void){
 
 //PORT A 1 - Button 1 Interrupt Pin (ISR1) - Green LED Blinking
 //PORT A 2 - Button 2 Interrupt Pin (ISR1) - Halt blinking for 2 seconds
-//PORT A 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORT E 0,1,2,3 chosen for the LEDs.
+//PORT D 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORT E 2,3,4,5 chosen for the LEDs.
 
 void init_button(void) {
 	PORTA->PCR[1] |= PORT_PCR_MUX(1) | PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0a);
