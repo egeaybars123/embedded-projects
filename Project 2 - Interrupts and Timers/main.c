@@ -9,7 +9,7 @@ void blink_green(void);
 void blink_red(void);
 void init_button(void);
 void init_counter(void);
-void Init_SysTick(void);
+void init_SysTick(void);
 void init_LEDs(void);
 void init_RGB(void);
 void PORTA_IRQHandler(void);
@@ -19,7 +19,6 @@ void delay(unsigned milliseconds);
 
 volatile unsigned count = 0;
 volatile unsigned led_count = 0;
-volatile unsigned flag_t = 0;
 volatile unsigned flag_green = 0;
 volatile unsigned flag_halt = 0;
 volatile unsigned timer_count = 0;
@@ -37,7 +36,7 @@ int main(void){
 	init_RGB();
 	init_counter();
 	init_LEDs();
-	Init_SysTick();
+	init_SysTick();
 	__enable_irq();
 	
 	
@@ -97,10 +96,10 @@ void init_RGB(void) {
 	PORTB->PCR[19] |= PORT_PCR_MUX(1);
 }
 
-void Init_SysTick(void) {
+void init_SysTick(void) {
     // Initialize SysTick for your required T time
 		SysTick->CTRL = 0; 
-    SysTick->LOAD = 42000; //needed for 1 ms delay.
+    SysTick->LOAD = SystemCoreClock/1000; //needed for 1 ms delay.
     SysTick->VAL = 0;
 		NVIC_SetPriority(SysTick_IRQn, 2);
     SysTick->CTRL |=  SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
@@ -117,13 +116,8 @@ void Delay(volatile unsigned int time_del) {
 
 void SysTick_Handler(void) {
 	++timer_count;
-	if ((timer_count > 500) && !flag_t) {
-		PTB->PDDR = MASK(18);		
-		PTB->PTOR = MASK(18);
-		timer_count = 0;
-	}
 	
-	else if ((timer_count > 700) && !flag_green && !flag_halt && flag_t) {
+	if ((timer_count > 700) && !flag_green && !flag_halt) {
 		PTB->PDDR = MASK(18);		
 		PTB->PTOR = MASK(18);
 		timer_count = 0;
@@ -161,7 +155,6 @@ void PORTA_IRQHandler(void) {
 	else if(PORTA->ISFR & MASK(2)) {
 		flag_halt = 1;
 	}
-	flag_t = 1;
 	//clear status flags.
 	PORTA->ISFR = 0xffffffff;
 }
@@ -179,7 +172,6 @@ void PORTD_IRQHandler(void) {
 	if (count == 16) {
 		count = 0;
 	}
-	flag_t = 1;
 	//clear status flags.
 	PORTD->ISFR = 0xffffffff;
 }
