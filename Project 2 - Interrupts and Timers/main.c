@@ -1,7 +1,6 @@
 #include <MKL25Z4.H>
 #include <stdio.h>
 #include <math.h>
-#include "utils.h"
 
 #define MASK(x) (1UL << (x))
 
@@ -52,7 +51,7 @@ int main(void){
 
 //PORT A 1 - Button 1 Interrupt Pin (ISR1) - Green LED Blinking
 //PORT A 2 - Button 2 Interrupt Pin (ISR1) - Halt blinking for 2 seconds
-//PORT D 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORT E 2,3,4,5 chosen for the LEDs.
+//PORT A 4 - Button 3 Interrupt Pin (ISR2) - Increase LED Counter <<<<------>>>> PORT E 0,1,2,3 chosen for the LEDs.
 
 void init_button(void) {
 	PORTA->PCR[1] |= PORT_PCR_MUX(1) | PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0a);
@@ -101,10 +100,17 @@ void init_RGB(void) {
 void Init_SysTick(void) {
     // Initialize SysTick for your required T time
 		SysTick->CTRL = 0; 
-    SysTick->LOAD = 41000; //(uint32_t)(0.7 * SystemCoreClock) - 1;
+    SysTick->LOAD = 42000; //needed for 1 ms delay.
     SysTick->VAL = 0;
 		NVIC_SetPriority(SysTick_IRQn, 2);
     SysTick->CTRL |=  SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
+}
+
+//Used for button debouncing.
+void Delay(volatile unsigned int time_del) {
+  while (time_del--) 
+		{
+  }
 }
 
 //***************** SYSTICK HANDLER *****************
@@ -117,7 +123,7 @@ void SysTick_Handler(void) {
 		timer_count = 0;
 	}
 	
-	else if ((timer_count > 1400) && !flag_green && !flag_halt && flag_t) {
+	else if ((timer_count > 700) && !flag_green && !flag_halt && flag_t) {
 		PTB->PDDR = MASK(18);		
 		PTB->PTOR = MASK(18);
 		timer_count = 0;
@@ -136,7 +142,7 @@ void SysTick_Handler(void) {
 		}
 	}
 	
-	else if ((timer_count > 1000) && flag_halt) {
+	else if ((timer_count > 2000) && flag_halt) {
 		flag_halt = 0;
 		timer_count = 0;
 	}
@@ -162,6 +168,8 @@ void PORTA_IRQHandler(void) {
 
 void PORTD_IRQHandler(void) {
 	//clear pending interrupts
+	
+	Delay(400000); //Used for button debouncing.
 	NVIC_ClearPendingIRQ(PORTD_IRQn);
 	
 	if(PORTD->ISFR & MASK(4)) {
